@@ -31,13 +31,13 @@ jobs:
       - name: Obfuscate Python File
         run: |
           mkdir -p obfuscated_files
-          pyarmor gen -O obfuscated_files obfuscated_main.py
+          pyarmor gen -O obfuscated_files main.py
 
        # Step 5: Build an executable with PyInstaller
       - name: Build Executable
         run: |
           mkdir -p build_output
-          pyinstaller --onefile --distpath build_output obfuscated_files/obfuscated_main.py
+          pyinstaller --onefile --distpath build_output obfuscated_files/main.py
 
       # Optional: Upload obfuscated files as an artifact
       - name: Upload Obfuscated Files
