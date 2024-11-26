@@ -1,4 +1,4 @@
-name: Obfuscate Python File
+name: Obfuscate and build Executable Python File
 
 on:
   push:
@@ -8,7 +8,11 @@ on:
 
 jobs:
   obfuscate:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: [3.11]  # Specify the Python version
 
     steps:
       # Step 1: Check out the repository
@@ -16,28 +20,38 @@ jobs:
         uses: actions/checkout@v3
 
       # Step 2: Set up Python
-      - name: Set up Python
+      - name: Set up Python ${{ matrix.python-version }
         uses: actions/setup-python@v4
         with:
-          python-version: 3.11  # Specify the Python version you need
+          python-version: ${{ matrix.python-version }}  # Specify the Python version you need
 
       # Step 3: Install PyArmor
-      - name: Install PyArmor
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
+        shell: "${{ matrix.os == 'windows-latest' ? 'pwsh' : 'bash' }}"
 
       # Step 4: Obfuscate the Python file
       - name: Obfuscate Python File
         run: |
-          mkdir -p obfuscated_files
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            mkdir obfuscated_files
+          else
+            mkdir -p obfuscated_files
           pyarmor gen -O obfuscated_files main.py
+        shell: "${{ matrix.os == 'windows-latest' ? 'pwsh' : 'bash' }}"
 
        # Step 5: Build an executable with PyInstaller
       - name: Build Executable
         run: |
-          mkdir -p build_output
+          if [ "${{ matrix.os }}" == "windows-latest" ]; then
+            mkdir build_output
+          else
+            mkdir -p build_output
+          fi
           pyinstaller --onefile --distpath build_output obfuscated_files/main.py
+        shell: "${{ matrix.os == 'windows-latest' ? 'pwsh' : 'bash' }}"
 
       # Optional: Upload obfuscated files as an artifact
       - name: Upload Obfuscated Files
